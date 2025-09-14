@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  dmmr-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ARK_API_KEY=${ARK_API_KEY}
+      - DMMR_API_BASE_URL=${DMMR_API_BASE_URL:-https://ark.cn-beijing.volces.com/api/v3}
+      - DMMR_MODEL_NAME=${DMMR_MODEL_NAME:-doubao-seed-1-6-flash-250715}
+      - DMMR_USE_REAL_VECTOR=${DMMR_USE_REAL_VECTOR:-0}
+      - DMMR_USE_REAL_GRAPH=${DMMR_USE_REAL_GRAPH:-0}
+      - DMMR_CACHE_DIR=/app/cache
+      - DMMR_OUTPUT_DIR=/app/results
+    volumes:
+      - ./cache:/app/cache
+      - ./results:/app/results
+    depends_on:
+      - neo4j
+    networks:
+      - dmmr-network
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5.15-community
+    environment:
+      - NEO4J_AUTH=neo4j/dmmr_password
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - dmmr-network
+    restart: unless-stopped
+
+  # 可选：向量数据库 (Milvus)
+  # milvus:
+  #   image: milvusdb/milvus:v2.3.0
+  #   ports:
+  #     - "19530:19530"
+  #   environment:
+  #     - ETCD_ENDPOINTS=etcd:2379
+  #     - MINIO_ADDRESS=minio:9000
+  #   depends_on:
+  #     - etcd
+  #     - minio
+  #   networks:
+  #     - dmmr-network
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:
+
+networks:
+  dmmr-network:
+    driver: bridge
+
+
