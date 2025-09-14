@@ -2,13 +2,14 @@
 """
 DMMR: Dynamic Multi-Modal Memory Retrieval System
 
-基于认知科学理论的长期记忆系统，用于增强大语言模型的多轮交互能力。
+A long-term memory system based on cognitive science theories, designed to enhance
+the multi-turn interaction capabilities of large language models.
 
-核心模块:
-- DMMRAgent: 主智能体
-- MultipleMemorySystems: 多重记忆系统
-- ActivationEngine: 激活引擎
-- CognitiveTriage: 认知分类
+Core Modules:
+- DMMRAgent: The main agent.
+- MultipleMemorySystems: The multi-memory system.
+- ActivationEngine: The activation engine.
+- CognitiveTriage: The cognitive triage module.
 """
 
 from .config import get_config, validate_config, config_manager

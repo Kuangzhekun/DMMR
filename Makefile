@@ -1,143 +1,145 @@
 # DMMR Makefile
-# 提供常用的开发和部署命令
+# Provides common development and deployment commands
 
 .PHONY: help install test run docker clean docs lint format
 
-# 默认目标
+# Default target
 help:
-	@echo "DMMR 项目管理命令"
-	@echo "=================="
+	@echo "DMMR Project Management Commands"
+	@echo "================================"
 	@echo ""
-	@echo "安装和设置:"
-	@echo "  install      安装项目依赖"
-	@echo "  install-dev  安装开发依赖"
-	@echo "  setup        运行设置脚本"
+	@echo "Installation and Setup:"
+	@echo "  install      Install project dependencies"
+	@echo "  install-dev  Install development dependencies"
+	@echo "  setup        Run the setup script"
 	@echo ""
-	@echo "开发和测试:"
-	@echo "  test         运行测试套件"
-	@echo "  benchmark    运行基准测试"
-	@echo "  lint         代码检查"
-	@echo "  format       代码格式化"
+	@echo "Development and Testing:"
+	@echo "  test         Run the test suite"
+	@echo "  benchmark    Run benchmarks"
+	@echo "  lint         Lint the code"
+	@echo "  format       Format the code"
 	@echo ""
-	@echo "运行服务:"
-	@echo "  run          启动API服务器"
-	@echo "  demo         运行演示脚本"
+	@echo "Running Services:"
+	@echo "  run          Start the API server"
+	@echo "  demo         Run the demo script"
 	@echo ""
-	@echo "Docker操作:"
-	@echo "  docker-build 构建Docker镜像"
-	@echo "  docker-up    启动Docker服务"
-	@echo "  docker-down  停止Docker服务"
+	@echo "Docker Operations:"
+	@echo "  docker-build Build the Docker image"
+	@echo "  docker-up    Start Docker services"
+	@echo "  docker-down  Stop Docker services"
+	@echo "  docker-logs  View Docker logs"
 	@echo ""
-	@echo "文档和清理:"
-	@echo "  docs         生成文档"
-	@echo "  clean        清理临时文件"
+	@echo "Documentation and Cleanup:"
+	@echo "  docs         Generate documentation"
+	@echo "  clean        Clean up temporary files"
 
-# 安装依赖
+# Install dependencies
 install:
-	@echo "📦 安装项目依赖..."
+	@echo "📦 Installing project dependencies..."
 	pip install -r requirements.txt
-	@echo "✅ 依赖安装完成"
+	@echo "✅ Dependencies installed successfully"
 
 install-dev:
-	@echo "📦 安装开发依赖..."
+	@echo "📦 Installing development dependencies..."
 	pip install -r requirements.txt
 	pip install pytest pytest-asyncio black flake8 mypy
-	@echo "✅ 开发依赖安装完成"
+	@echo "✅ Development dependencies installed successfully"
 
-# 运行设置脚本
+# Run setup script
 setup:
-	@echo "🚀 运行设置脚本..."
+	@echo "🚀 Running setup script..."
 	@if [ "$(shell uname)" = "Linux" ] || [ "$(shell uname)" = "Darwin" ]; then \
 		chmod +x scripts/setup.sh && ./scripts/setup.sh; \
 	else \
-		echo "请在Windows上运行: powershell scripts/setup.ps1"; \
+		echo "On Windows, please run: powershell scripts/setup.ps1"; \
 	fi
 
-# 测试
+# Testing
 test:
-	@echo "🧪 运行测试套件..."
+	@echo "🧪 Running test suite..."
 	python -m pytest tests/ -v
-	@echo "✅ 测试完成"
+	@echo "✅ Tests completed"
 
 benchmark:
-	@echo "⚡ 运行基准测试..."
+	@echo "⚡ Running benchmarks..."
 	python experiments/run_benchmark.py
-	@echo "✅ 基准测试完成"
+	@echo "✅ Benchmarks completed"
 
-# 代码质量
+# Code Quality
 lint:
-	@echo "🔍 运行代码检查..."
+	@echo "🔍 Running code linting..."
 	flake8 src/ --max-line-length=100
 	mypy src/
-	@echo "✅ 代码检查完成"
+	@echo "✅ Linting completed"
 
 format:
-	@echo "✨ 格式化代码..."
+	@echo "✨ Formatting code..."
 	black src/ examples/ experiments/
-	@echo "✅ 代码格式化完成"
+	@echo "✅ Code formatting completed"
 
-# 运行服务
+# Run services
 run:
-	@echo "🚀 启动API服务器..."
+	@echo "🚀 Starting API server..."
 	python api/server.py
 
 demo:
-	@echo "🎯 运行演示脚本..."
+	@echo "🎯 Running demo script..."
 	python examples/basic_usage.py
 
-# Docker操作
+# Docker Operations
 docker-build:
-	@echo "🐳 构建Docker镜像..."
+	@echo "🐳 Building Docker image..."
 	docker build -t dmmr:latest .
-	@echo "✅ Docker镜像构建完成"
+	@echo "✅ Docker image built successfully"
 
 docker-up:
-	@echo "🚀 启动Docker服务..."
+	@echo "🚀 Starting Docker services..."
 	docker-compose up -d
-	@echo "✅ Docker服务启动完成"
+	@echo "✅ Docker services started successfully"
 
 docker-down:
-	@echo "🛑 停止Docker服务..."
+	@echo "🛑 Stopping Docker services..."
 	docker-compose down
-	@echo "✅ Docker服务已停止"
+	@echo "✅ Docker services stopped"
 
 docker-logs:
-	@echo "📋 查看Docker日志..."
+	@echo "📋 Viewing Docker logs..."
 	docker-compose logs -f dmmr-api
 
-# 文档
+# Documentation
 docs:
-	@echo "📚 生成文档..."
-	@echo "API文档可在启动服务后访问: http://localhost:8000/docs"
+	@echo "📚 Generating documentation..."
+	@echo "API documentation is available at http://localhost:8000/docs after starting the service."
 
-# 清理
+# Cleanup
 clean:
-	@echo "🧹 清理临时文件..."
+	@echo "🧹 Cleaning up temporary files..."
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 	rm -rf .pytest_cache/ 2>/dev/null || true
 	rm -rf dist/ build/ 2>/dev/null || true
-	@echo "✅ 清理完成"
+	@echo "✅ Cleanup completed"
 
-# 检查环境
+# Check environment
 check-env:
-	@echo "🔍 检查环境配置..."
-	@python -c "from src.dmmr import validate_config; print('✅ 配置有效' if validate_config() else '❌ 配置无效')"
+	@echo "🔍 Checking environment configuration..."
+	@python -c "from src.dmmr import validate_config; print('✅ Configuration is valid' if validate_config() else '❌ Configuration is invalid')"
 
-# 健康检查
+# Health check
 health:
-	@echo "🏥 检查服务健康状态..."
-	@curl -s http://localhost:8000/health | python -m json.tool || echo "❌ API服务未启动"
+	@echo "🏥 Checking service health status..."
+	@curl -s http://localhost:8000/health | python -m json.tool || echo "❌ API service is not running"
 
-# 快速启动（完整流程）
+# Quickstart (full process)
 quickstart: install setup run
 
-# 开发环境设置
+# Development environment setup
 dev-setup: install-dev
-	@echo "🔧 创建开发环境配置..."
+	@echo "🔧 Creating development environment configuration..."
 	@if [ ! -f ".env" ]; then cp .env.example .env; fi
-	@echo "✅ 开发环境设置完成"
+	@echo "✅ Development environment setup completed"
+
 
 

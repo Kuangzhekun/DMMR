@@ -1,5 +1,5 @@
-# DMMR 一键安装脚本 (Windows PowerShell)
-# 适用于 Windows 系统
+# DMMR One-Click Installer (Windows PowerShell)
+# For Windows systems
 
 param(
     [switch]$Docker,
@@ -7,51 +7,51 @@ param(
     [switch]$Help
 )
 
-# 显示帮助信息
+# Display help information
 if ($Help) {
-    Write-Host "DMMR Windows 安装脚本" -ForegroundColor Green
-    Write-Host "用法: .\setup.ps1 [选项]" -ForegroundColor Yellow
+    Write-Host "DMMR Windows Installation Script" -ForegroundColor Green
+    Write-Host "Usage: .\setup.ps1 [Options]" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "选项:"
-    Write-Host "  -Local   使用本地Python环境安装"
-    Write-Host "  -Docker  使用Docker容器安装"
-    Write-Host "  -Help    显示此帮助信息"
+    Write-Host "Options:"
+    Write-Host "  -Local   Install using a local Python environment"
+    Write-Host "  -Docker  Install using Docker containers"
+    Write-Host "  -Help    Display this help message"
     Write-Host ""
-    Write-Host "示例:"
-    Write-Host "  .\setup.ps1 -Local   # 本地安装"
-    Write-Host "  .\setup.ps1 -Docker  # Docker安装"
+    Write-Host "Examples:"
+    Write-Host "  .\setup.ps1 -Local   # Local installation"
+    Write-Host "  .\setup.ps1 -Docker  # Docker installation"
     exit 0
 }
 
-Write-Host "🚀 DMMR Windows 系统安装脚本" -ForegroundColor Green
-Write-Host "================================" -ForegroundColor Green
+Write-Host "🚀 DMMR Windows System Installation Script" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
 
-# 检查执行策略
+# Check execution policy
 function Test-ExecutionPolicy {
-    Write-Host "🔐 检查PowerShell执行策略..." -ForegroundColor Yellow
+    Write-Host "🔐 Checking PowerShell execution policy..." -ForegroundColor Yellow
     
     $currentPolicy = Get-ExecutionPolicy -Scope CurrentUser
     
     if ($currentPolicy -eq "Restricted") {
-        Write-Host "⚠️  当前执行策略受限，正在设置..." -ForegroundColor Yellow
+        Write-Host "⚠️  Current execution policy is restricted, attempting to set it..." -ForegroundColor Yellow
         try {
             Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-            Write-Host "✅ 执行策略已设置为 RemoteSigned" -ForegroundColor Green
+            Write-Host "✅ Execution policy has been set to RemoteSigned" -ForegroundColor Green
         }
         catch {
-            Write-Host "❌ 无法设置执行策略，请以管理员身份运行:" -ForegroundColor Red
+            Write-Host "❌ Failed to set execution policy. Please run as an administrator:" -ForegroundColor Red
             Write-Host "   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser" -ForegroundColor Red
             exit 1
         }
     }
     else {
-        Write-Host "✅ 执行策略: $currentPolicy" -ForegroundColor Green
+        Write-Host "✅ Execution policy: $currentPolicy" -ForegroundColor Green
     }
 }
 
-# 检查Python环境
+# Check Python environment
 function Test-Python {
-    Write-Host "🐍 检查Python环境..." -ForegroundColor Yellow
+    Write-Host "🐍 Checking Python environment..." -ForegroundColor Yellow
     
     try {
         $pythonVersion = & python --version 2>&1
@@ -59,29 +59,29 @@ function Test-Python {
             Write-Host "✅ $pythonVersion" -ForegroundColor Green
         }
         else {
-            throw "Python未找到"
+            throw "Python not found"
         }
         
-        # 检查版本
+        # Check version
         $version = (& python -c "import sys; print('.'.join(map(str, sys.version_info[:2])))" 2>&1)
         $requiredVersion = [Version]"3.9"
         $currentVersion = [Version]$version
         
         if ($currentVersion -lt $requiredVersion) {
-            Write-Host "❌ Python版本过低: $version，需要3.9+" -ForegroundColor Red
+            Write-Host "❌ Python version is too old: $version, Python 3.9+ is required" -ForegroundColor Red
             exit 1
         }
     }
     catch {
-        Write-Host "❌ 未找到Python，请先安装Python 3.9+" -ForegroundColor Red
-        Write-Host "   下载地址: https://www.python.org/downloads/" -ForegroundColor Yellow
+        Write-Host "❌ Python not found. Please install Python 3.9+ first." -ForegroundColor Red
+        Write-Host "   Download from: https://www.python.org/downloads/" -ForegroundColor Yellow
         exit 1
     }
 }
 
-# 检查Docker环境
+# Check Docker environment
 function Test-Docker {
-    Write-Host "🐳 检查Docker环境..." -ForegroundColor Yellow
+    Write-Host "🐳 Checking Docker environment..." -ForegroundColor Yellow
     
     $script:DockerAvailable = $false
     $script:ComposeAvailable = $false
@@ -94,7 +94,7 @@ function Test-Docker {
         }
     }
     catch {
-        Write-Host "⚠️  Docker未安装" -ForegroundColor Yellow
+        Write-Host "⚠️  Docker not found" -ForegroundColor Yellow
     }
     
     try {
@@ -105,71 +105,71 @@ function Test-Docker {
         }
     }
     catch {
-        Write-Host "⚠️  Docker Compose未安装" -ForegroundColor Yellow
+        Write-Host "⚠️  Docker Compose not found" -ForegroundColor Yellow
     }
 }
 
-# 创建Python虚拟环境
+# Create Python virtual environment
 function New-VirtualEnv {
-    Write-Host "📦 创建Python虚拟环境..." -ForegroundColor Yellow
+    Write-Host "📦 Creating Python virtual environment..." -ForegroundColor Yellow
     
     if (Test-Path "venv") {
-        Write-Host "✅ 虚拟环境已存在" -ForegroundColor Green
+        Write-Host "✅ Virtual environment already exists" -ForegroundColor Green
     }
     else {
         & python -m venv venv
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "✅ 虚拟环境创建完成" -ForegroundColor Green
+            Write-Host "✅ Virtual environment created successfully" -ForegroundColor Green
         }
         else {
-            Write-Host "❌ 虚拟环境创建失败" -ForegroundColor Red
+            Write-Host "❌ Failed to create virtual environment" -ForegroundColor Red
             exit 1
         }
     }
     
-    # 激活虚拟环境
+    # Activate virtual environment
     & .\venv\Scripts\Activate.ps1
     
-    # 升级pip
-    Write-Host "📦 升级pip..." -ForegroundColor Yellow
+    # Upgrade pip
+    Write-Host "📦 Upgrading pip..." -ForegroundColor Yellow
     & python -m pip install --upgrade pip
-    Write-Host "✅ pip已升级" -ForegroundColor Green
+    Write-Host "✅ pip has been upgraded" -ForegroundColor Green
 }
 
-# 安装Python依赖
+# Install Python dependencies
 function Install-Dependencies {
-    Write-Host "📚 安装Python依赖..." -ForegroundColor Yellow
+    Write-Host "📚 Installing Python dependencies..." -ForegroundColor Yellow
     
     & pip install -r requirements.txt
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✅ 依赖安装完成" -ForegroundColor Green
+        Write-Host "✅ Dependencies installed successfully" -ForegroundColor Green
     }
     else {
-        Write-Host "❌ 依赖安装失败" -ForegroundColor Red
+        Write-Host "❌ Failed to install dependencies" -ForegroundColor Red
         exit 1
     }
 }
 
-# 配置环境变量
+# Configure environment variables
 function Set-Environment {
-    Write-Host "⚙️ 配置环境变量..." -ForegroundColor Yellow
+    Write-Host "⚙️ Configuring environment variables..." -ForegroundColor Yellow
     
     if (-not (Test-Path ".env")) {
         Copy-Item ".env.example" ".env"
-        Write-Host "✅ 环境配置文件已创建" -ForegroundColor Green
+        Write-Host "✅ Environment configuration file created" -ForegroundColor Green
         Write-Host ""
-        Write-Host "⚠️  重要：请编辑 .env 文件设置您的API密钥：" -ForegroundColor Yellow
+        Write-Host "⚠️  IMPORTANT: Please edit the .env file to set your API key:" -ForegroundColor Yellow
         Write-Host "   ARK_API_KEY=your_actual_api_key_here" -ForegroundColor Yellow
         Write-Host ""
     }
     else {
-        Write-Host "✅ 环境配置文件已存在" -ForegroundColor Green
+        Write-Host "✅ Environment configuration file already exists" -ForegroundColor Green
     }
 }
 
-# 创建必要目录
+# Create necessary directories
 function New-Directories {
-    Write-Host "📁 创建必要目录..." -ForegroundColor Yellow
+    Write-Host "📁 Creating necessary directories..." -ForegroundColor Yellow
     
     $directories = @("cache", "results", "logs")
     foreach ($dir in $directories) {
@@ -177,82 +177,82 @@ function New-Directories {
             New-Item -ItemType Directory -Path $dir | Out-Null
         }
     }
-    Write-Host "✅ 目录创建完成" -ForegroundColor Green
+    Write-Host "✅ Directories created successfully" -ForegroundColor Green
 }
 
-# 验证安装
+# Verify installation
 function Test-Installation {
-    Write-Host "🧪 验证安装..." -ForegroundColor Yellow
+    Write-Host "🧪 Verifying installation..." -ForegroundColor Yellow
     
-    # 检查配置
+    # Check configuration
     try {
         & python -c "from src.dmmr import validate_config; exit(0 if validate_config() else 1)" 2>$null
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "✅ 配置验证通过" -ForegroundColor Green
+            Write-Host "✅ Configuration validation passed" -ForegroundColor Green
         }
         else {
-            Write-Host "⚠️  配置验证失败，请检查API密钥设置" -ForegroundColor Yellow
+            Write-Host "⚠️  Configuration validation failed. Please check your API key settings." -ForegroundColor Yellow
         }
     }
     catch {
-        Write-Host "⚠️  配置验证失败，请检查API密钥设置" -ForegroundColor Yellow
+        Write-Host "⚠️  Configuration validation failed. Please check your API key settings." -ForegroundColor Yellow
     }
     
-    # 运行基本测试
-    Write-Host "🔍 运行基本功能测试..." -ForegroundColor Yellow
+    # Run basic test
+    Write-Host "🔍 Running basic functionality test..." -ForegroundColor Yellow
     try {
         & python examples/basic_usage.py >$null 2>&1
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "✅ 基本功能测试通过" -ForegroundColor Green
+            Write-Host "✅ Basic functionality test passed" -ForegroundColor Green
         }
         else {
-            Write-Host "⚠️  基本功能测试失败，请检查配置" -ForegroundColor Yellow
+            Write-Host "⚠️  Basic functionality test failed. Please check your configuration." -ForegroundColor Yellow
         }
     }
     catch {
-        Write-Host "⚠️  基本功能测试失败，请检查配置" -ForegroundColor Yellow
+        Write-Host "⚠️  Basic functionality test failed. Please check your configuration." -ForegroundColor Yellow
     }
 }
 
-# 显示后续步骤
+# Display next steps
 function Show-NextSteps {
     Write-Host ""
-    Write-Host "🎉 DMMR安装完成！" -ForegroundColor Green
-    Write-Host "===================" -ForegroundColor Green
+    Write-Host "🎉 DMMR installation complete!" -ForegroundColor Green
+    Write-Host "=============================" -ForegroundColor Green
     Write-Host ""
-    Write-Host "📋 后续步骤：" -ForegroundColor Yellow
+    Write-Host "📋 Next Steps:" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "1. 激活虚拟环境：" -ForegroundColor White
+    Write-Host "1. Activate the virtual environment:" -ForegroundColor White
     Write-Host "   .\venv\Scripts\Activate.ps1" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "2. 编辑环境配置：" -ForegroundColor White
-    Write-Host "   notepad .env  # 设置ARK_API_KEY" -ForegroundColor Cyan
+    Write-Host "2. Edit the environment configuration:" -ForegroundColor White
+    Write-Host "   notepad .env  # Set ARK_API_KEY" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "3. 启动API服务：" -ForegroundColor White
+    Write-Host "3. Start the API service:" -ForegroundColor White
     Write-Host "   python api/server.py" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "4. 运行示例：" -ForegroundColor White
+    Write-Host "4. Run an example:" -ForegroundColor White
     Write-Host "   python examples/basic_usage.py" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "5. 运行基准测试：" -ForegroundColor White
+    Write-Host "5. Run benchmarks:" -ForegroundColor White
     Write-Host "   python experiments/run_benchmark.py" -ForegroundColor Cyan
     Write-Host ""
     
     if ($script:DockerAvailable -and $script:ComposeAvailable) {
-        Write-Host "🐳 Docker选项：" -ForegroundColor Blue
-        Write-Host "   docker-compose up -d  # 启动完整服务栈" -ForegroundColor Cyan
+        Write-Host "🐳 Docker Options:" -ForegroundColor Blue
+        Write-Host "   docker-compose up -d  # Start the complete service stack" -ForegroundColor Cyan
         Write-Host ""
     }
     
-    Write-Host "📚 更多信息：" -ForegroundColor Yellow
-    Write-Host "   - 快速开始: docs/QUICKSTART.md" -ForegroundColor White
-    Write-Host "   - 部署指南: docs/DEPLOYMENT.md" -ForegroundColor White
-    Write-Host "   - API文档: http://localhost:8000/docs" -ForegroundColor White
+    Write-Host "📚 More Information:" -ForegroundColor Yellow
+    Write-Host "   - Quickstart Guide: docs/QUICKSTART.md" -ForegroundColor White
+    Write-Host "   - Deployment Guide: docs/DEPLOYMENT.md" -ForegroundColor White
+    Write-Host "   - API Documentation: http://localhost:8000/docs" -ForegroundColor White
 }
 
-# 本地安装流程
+# Local installation process
 function Install-Local {
-    Write-Host "选择本地安装方式" -ForegroundColor Green
+    Write-Host "Starting local installation..." -ForegroundColor Green
     
     Test-ExecutionPolicy
     Test-Python
@@ -264,67 +264,67 @@ function Install-Local {
     Show-NextSteps
 }
 
-# Docker安装流程
+# Docker installation process
 function Install-Docker {
     if (-not $script:DockerAvailable) {
-        Write-Host "❌ Docker未安装，无法使用Docker方式" -ForegroundColor Red
-        Write-Host "   请先安装Docker Desktop: https://www.docker.com/products/docker-desktop" -ForegroundColor Yellow
+        Write-Host "❌ Docker is not installed. Cannot proceed with Docker installation." -ForegroundColor Red
+        Write-Host "   Please install Docker Desktop first: https://www.docker.com/products/docker-desktop" -ForegroundColor Yellow
         exit 1
     }
     
-    Write-Host "选择Docker安装方式" -ForegroundColor Green
+    Write-Host "Starting Docker installation..." -ForegroundColor Green
     
     Set-Environment
     New-Directories
     
-    Write-Host "🐳 构建Docker镜像..." -ForegroundColor Yellow
+    Write-Host "🐳 Building Docker image..." -ForegroundColor Yellow
     & docker build -t dmmr:latest .
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✅ Docker镜像构建完成" -ForegroundColor Green
+        Write-Host "✅ Docker image built successfully" -ForegroundColor Green
     }
     else {
-        Write-Host "❌ Docker镜像构建失败" -ForegroundColor Red
+        Write-Host "❌ Failed to build Docker image" -ForegroundColor Red
         exit 1
     }
     
     if ($script:ComposeAvailable) {
-        Write-Host "🚀 启动服务..." -ForegroundColor Yellow
+        Write-Host "🚀 Starting services..." -ForegroundColor Yellow
         & docker-compose up -d
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "✅ 服务启动完成" -ForegroundColor Green
+            Write-Host "✅ Services started successfully" -ForegroundColor Green
             Write-Host ""
-            Write-Host "🌐 服务地址：" -ForegroundColor Yellow
-            Write-Host "   - API服务: http://localhost:8000" -ForegroundColor White
-            Write-Host "   - API文档: http://localhost:8000/docs" -ForegroundColor White
-            Write-Host "   - Neo4j: http://localhost:7474" -ForegroundColor White
+            Write-Host "🌐 Service Endpoints:" -ForegroundColor Yellow
+            Write-Host "   - API Service: http://localhost:8000" -ForegroundColor White
+            Write-Host "   - API Docs: http://localhost:8000/docs" -ForegroundColor White
+            Write-Host "   - Neo4j Browser: http://localhost:7474" -ForegroundColor White
         }
         else {
-            Write-Host "❌ 服务启动失败" -ForegroundColor Red
+            Write-Host "❌ Failed to start services" -ForegroundColor Red
             exit 1
         }
     }
     else {
-        Write-Host "🚀 启动API服务..." -ForegroundColor Yellow
+        Write-Host "🚀 Starting API service..." -ForegroundColor Yellow
         & docker run -d --name dmmr-api -p 8000:8000 --env-file .env dmmr:latest
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "✅ API服务启动完成: http://localhost:8000" -ForegroundColor Green
+            Write-Host "✅ API service started successfully: http://localhost:8000" -ForegroundColor Green
         }
         else {
-            Write-Host "❌ API服务启动失败" -ForegroundColor Red
+            Write-Host "❌ Failed to start API service" -ForegroundColor Red
             exit 1
         }
     }
 }
 
-# 主安装流程
+# Main installation process
 function Start-Installation {
-    Write-Host "开始安装DMMR系统..." -ForegroundColor Green
+    Write-Host "Starting DMMR system installation..." -ForegroundColor Green
     Write-Host ""
     
-    # 检查环境
+    # Check environment
     Test-Docker
     
-    # 根据参数选择安装方式
+    # Select installation method based on parameters
     if ($Local) {
         Install-Local
     }
@@ -332,16 +332,16 @@ function Start-Installation {
         Install-Docker
     }
     else {
-        # 交互式选择
-        Write-Host "请选择安装方式：" -ForegroundColor Yellow
-        Write-Host "1) 本地安装 (Python虚拟环境)" -ForegroundColor White
+        # Interactive selection
+        Write-Host "Please select an installation method:" -ForegroundColor Yellow
+        Write-Host "1) Local installation (Python virtual environment)" -ForegroundColor White
         if ($script:DockerAvailable) {
-            Write-Host "2) Docker安装" -ForegroundColor White
+            Write-Host "2) Docker installation" -ForegroundColor White
         }
         Write-Host ""
         
         do {
-            $choice = Read-Host "请输入选择 (1-2)"
+            $choice = Read-Host "Enter your choice (1-2)"
         } while ($choice -notmatch "^[12]$")
         
         switch ($choice) {
@@ -351,7 +351,7 @@ function Start-Installation {
                     Install-Docker
                 }
                 else {
-                    Write-Host "❌ Docker未安装，无法使用Docker方式" -ForegroundColor Red
+                    Write-Host "❌ Docker is not installed. Cannot proceed with Docker installation." -ForegroundColor Red
                     exit 1
                 }
             }
@@ -359,13 +359,14 @@ function Start-Installation {
     }
 }
 
-# 错误处理
+# Error handling
 trap {
-    Write-Host "❌ 安装过程中出现错误: $_" -ForegroundColor Red
+    Write-Host "❌ An error occurred during installation: $_" -ForegroundColor Red
     exit 1
 }
 
-# 运行主函数
+# Run the main function
 Start-Installation
+
 
 

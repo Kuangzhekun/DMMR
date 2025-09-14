@@ -122,3 +122,4 @@ class BenchmarkResult(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now, description="时间戳")
 
 
+
